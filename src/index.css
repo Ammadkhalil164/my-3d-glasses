@@ -40,16 +40,115 @@ body {
 
 /* Mobile responsiveness overrides */
 @media (max-width: 768px) {
-  .collection-card {
-    padding: 16px !important;
+
+
+  main.font-tobiroto {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding-top: 5rem !important; /* clear header */
+    padding-bottom: 2rem !important;
+    min-height: 0 !important;
+    gap: 16px !important;
   }
-  
-  .collection-card-img {
-    max-height: none !important;
-    width: 85% !important;
-    max-width: 100% !important;
+
+  .hero-stage-wrapper {
+    display: contents !important;
+  }
+
+  #hero-model-placeholder {
+    order: 1 !important;
+    width: 250px !important;
+    height: 250px !important;
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 25 !important;
+    margin: 0 auto !important;
+  }
+
+  #hero-model-placeholder div.rounded-full {
+    transform: scale(0.65) !important;
+  }
+
+  .hero-title {
+    order: 2 !important;
+    position: relative !important;
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    transform: none !important;
+    text-align: center !important;
+    width: 100% !important;
+    z-index: 10 !important;
+    opacity: 1 !important;
+    margin: 8px 0 !important;
     height: auto !important;
-    object-fit: contain !important;
+    pointer-events: none !important;
+    white-space: normal !important;
+  }
+
+  .hero-title h1 {
+    font-size: clamp(2rem, 9vw, 3rem) !important;
+    width: 100% !important;
+    text-align: center !important;
+  }
+
+  .hero-cards {
+    order: 3 !important;
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    margin: 8px 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    z-index: 30 !important;
+  }
+
+  .hero-cards + .hero-cards {
+    order: 4 !important;
+    margin-top: 0 !important;
+  }
+
+  .hero-dock {
+    order: 5 !important;
+    width: 100% !important;
+    margin-top: 16px !important;
+  }
+
+  #glasses-canvas {
+    z-index: 20 !important;
+    pointer-events: none !important;
+    transform: none !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    left: 0 !important;
+    right: 0 !important;
+  }
+
+  .spline-canvas,
+  #GL_VIEWPORT_02,
+  [data-card="digital"] canvas,
+  [data-card="digital"] iframe,
+  .digital-card canvas,
+  .digital-card iframe {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 300px !important;
+    transform: scale(1.8) !important; /* scale up to match other cards */
+    transform-origin: center center !important;
   }
 }
+
+/* Desktop specific overrides for centering the 3D model placeholder */
+@media (min-width: 1024px) {
+  #hero-model-placeholder {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
+
 

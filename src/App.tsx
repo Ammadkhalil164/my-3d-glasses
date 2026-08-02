@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   ArrowRight, Shield, RefreshCw, Eye, Sparkles, Check, 
-  Trash2, X, Plus, Minus, Info, ArrowUpRight, Award, Compass, Heart,
+  Trash2, X, Plus, Minus, Info, Award, Compass, Heart,
   Instagram, Twitter, Linkedin, Send, Mail, Phone
 } from "lucide-react";
 import { FRAME_STYLES } from "./data";
@@ -25,6 +25,15 @@ export default function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
 
+  // Force layout recalculation on mount to align 3D waypoints
+  React.useEffect(() => {
+    const triggerResize = () => {
+      window.dispatchEvent(new Event("resize"));
+    };
+    setTimeout(triggerResize, 100);
+    setTimeout(triggerResize, 500);
+  }, []);
+
   // Toggle favorite state
   const toggleFavorite = (id: string) => {
     if (favorites.includes(id)) {
@@ -44,7 +53,7 @@ export default function App() {
   };
 
   return (
-    <div className="relative z-20 bg-transparent min-h-screen w-full text-[#2E2F2E] overflow-x-hidden flex flex-col justify-between">
+    <div className="relative md:z-20 bg-transparent min-h-screen w-full text-[#2E2F2E] overflow-x-hidden flex flex-col justify-between">
       {/* <ThreeDExperience /> */}
       {/* Dynamic Navigation Header */}
       <Header 
@@ -58,17 +67,17 @@ export default function App() {
       <main className="font-tobiroto flex-1 w-full max-w-7xl mx-auto px-6 md:px-12 pt-36 pb-20 flex flex-col justify-center relative select-none min-h-[calc(100vh-140px)]">
         
         {/* Giant Watermark Background Typography (Symmetric Central Axis Layout as requested) */}
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 w-full flex justify-center items-center z-0 px-4 md:px-12 pointer-events-none select-none overflow-hidden h-[300px] md:h-[450px]">
+        <div className="hero-title absolute inset-x-0 top-1/2 -translate-y-1/2 w-full flex justify-center items-center z-0 px-4 md:px-12 pointer-events-none select-none overflow-hidden h-[300px] md:h-[450px]">
           <h1 className="font-primary text-[9.5vw] font-light leading-none tracking-tight text-[#2E2F2E] select-none uppercase text-center">
             FUTURE VISION
           </h1>
         </div>
 
         {/* Central Model Stage Wrapper */}
-        <div className="relative w-full flex-1 flex flex-col md:block items-center justify-center min-h-[500px] md:min-h-[580px] z-10">
+        <div className="hero-stage-wrapper relative w-full flex-1 flex flex-col md:block items-center justify-center min-h-[500px] md:min-h-[580px] z-10">
           
           {/* Main profile photograph / 3D Model placeholder container - transitions smoothly */}
-          <div className="relative w-[340px] h-[340px] md:w-[500px] md:h-[500px] flex items-center justify-center">
+          <div id="hero-model-placeholder" className="relative w-[340px] h-[340px] md:w-[500px] md:h-[500px] flex items-center justify-center">
             
             {/* Interactive Backdrop glowing halo lines matching Ref */}
             <div className="absolute w-[360px] h-[360px] md:w-[520px] md:h-[520px] rounded-full border border-[#2E2F2E]/5 pointer-events-none animate-pulse" />
@@ -142,7 +151,7 @@ export default function App() {
             initial={{ opacity: 0, x: -40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="relative md:absolute md:top-[12%] md:left-0 md:xl:left-4 mt-10 md:mt-0 bg-white/40 border border-[#2E2F2E]/15 hover:border-[#2E2F2E]/30 p-4 rounded-3xl flex items-center gap-4 transition-all duration-300 shadow-md backdrop-blur-md w-full max-w-[310px] z-30"
+            className="hero-cards relative md:absolute md:top-[12%] md:left-0 md:xl:left-4 mt-10 md:mt-0 bg-white/40 border border-[#2E2F2E]/15 hover:border-[#2E2F2E]/30 p-4 rounded-3xl flex items-center gap-4 transition-all duration-300 shadow-md backdrop-blur-md w-full max-w-[310px] z-30"
           >
             <div className="w-16 h-16 rounded-2xl bg-white/50 border border-[#2E2F2E]/10 overflow-hidden relative flex-shrink-0 flex items-center justify-center p-1.5 shadow-inner">
               <img 
@@ -171,7 +180,7 @@ export default function App() {
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="relative md:absolute md:top-[12%] md:right-0 md:xl:right-4 mt-4 md:mt-0 bg-white/40 border border-[#2E2F2E]/15 hover:border-[#2E2F2E]/30 p-4 rounded-3xl flex items-center gap-4 transition-all duration-300 shadow-md backdrop-blur-md w-full max-w-[310px] z-30"
+            className="hero-cards relative md:absolute md:top-[12%] md:right-0 md:xl:right-4 mt-4 md:mt-0 bg-white/40 border border-[#2E2F2E]/15 hover:border-[#2E2F2E]/30 p-4 rounded-3xl flex items-center gap-4 transition-all duration-300 shadow-md backdrop-blur-md w-full max-w-[310px] z-30"
           >
             <div className="space-y-1 text-right">
               <span className="font-tobiroto text-[10px] uppercase font-semibold text-[#2E2F2E]/60 tracking-widest block">
@@ -197,7 +206,7 @@ export default function App() {
         </div>
 
         {/* BOTTOM SECTION: Model Frame Plating selector Dock & Try-On Actions */}
-        <div className="mt-12 flex flex-col md:flex-row justify-between items-center gap-6 relative z-35 select-none border-t border-[#2E2F2E]/15 pt-8">
+        <div className="hero-dock mt-12 flex flex-col md:flex-row justify-between items-center gap-6 relative z-35 select-none border-t border-[#2E2F2E]/15 pt-8">
           
           {/* Quick Stats or Location detail overlay */}
           <div className="flex items-center gap-4 text-xs font-tobiroto font-semibold text-[#2E2F2E]/70">
@@ -982,144 +991,6 @@ export default function App() {
         </div>
       </section>
 
-      {/* COLLECTION SHOWCASE SECTION (Ref Image: Dark theme, large lifestyle photo on left, "collection" header, brand paragraph, 3 vertical cards of shoes/furniture, "view more" CTA) */}
-      <section className="w-full bg-[#2E2F2E] text-[#F0EADF] py-24 border-t border-[#F0EADF]/10 relative z-20">
-        <div className="max-w-7xl mx-auto px-6 md:px-12">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-            
-            {/* LEFT SIDE: Large portrait/atelier photo made with transparent glass theme */}
-            <div className="lg:col-span-5 relative group select-none">
-              <div className="w-full aspect-[3/4] rounded-[48px] overflow-hidden bg-[#F0EADF] border border-[#F0EADF]/10 relative shadow-2xl flex items-center justify-center p-8">
-                <img 
-                  src="https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&q=80&w=800" 
-                  alt="XLView Handcrafted Bespoke Glasses" 
-                  className="w-full h-auto object-contain group-hover:scale-[1.05] transition-transform duration-700 mix-blend-multiply"
-                  referrerPolicy="no-referrer"
-                />
-                
-                {/* Visual architectural node tag */}
-                <div className="absolute bottom-6 left-6 px-4 py-2 bg-[#2E2F2E]/80 backdrop-blur-md rounded-2xl border border-[#F0EADF]/15 font-mono text-[9px] uppercase tracking-widest">
-                  Atelier Node // Turin, IT
-                </div>
-              </div>
-            </div>
-
-            {/* RIGHT SIDE: Header, text paragraph, 3 product cards, and footers */}
-            <div className="lg:col-span-7 flex flex-col justify-between space-y-12">
-              
-              {/* Title & Info block */}
-              <div className="space-y-6">
-                <h2 className="font-primary text-6xl md:text-7xl font-extralight tracking-tight text-[#F0EADF] uppercase select-none leading-none">
-                  collection
-                </h2>
-                <p className="font-secondary text-sm md:text-base text-[#F0EADF]/75 max-w-xl leading-relaxed">
-                  At XLView, we are dedicated to crafting bespoke luxury eyewear made exclusively from premium recycled Japanese titanium and organic Italian bio-acetates. Our designs embrace modern minimalism while incorporating unique organic details that bring warmth and distinct personality to any style.
-                </p>
-              </div>
-
-              {/* 3 Symmetric Luxury Eyewear Cards (styled after chairs/shoes cards in reference image) */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 w-full items-stretch select-none">
-                
-                {/* Eyewear Card 1: Aurelia gold */}
-                <div 
-                  className="collection-card bg-[#F0EADF] rounded-[32px] p-6 flex flex-col justify-between items-center text-center aspect-[3/4] border border-[#F0EADF]/20 hover:-translate-y-2 transition-all duration-300 group cursor-pointer shadow-lg"
-                  onClick={() => {
-                    const style = FRAME_STYLES.find(f => f.id === "aurelia");
-                    if (style) {
-                      setActiveFrame(style);
-                      const el = document.getElementById("header-element") || document.body;
-                      el.scrollIntoView({ behavior: "smooth" });
-                    }
-                  }}
-                >
-                  <div className="w-full flex-1 flex items-center justify-center">
-                    <img 
-                      src="/aurelia.png" 
-                      alt="Aurelia wireframe gold" 
-                      className="collection-card-img max-h-[85px] object-contain group-hover:scale-110 transition-transform duration-500 mix-blend-multiply"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-                  <div>
-                    <span className="font-primary text-[10px] font-black uppercase tracking-widest text-[#2E2F2E] block">@aurelia</span>
-                    <span className="font-secondary italic text-[9px] text-[#2E2F2E]/60 block mt-0.5">Wire Champagne Gold</span>
-                  </div>
-                </div>
-
-                {/* Eyewear Card 2: Obsidian slate */}
-                <div 
-                  className="collection-card bg-[#F0EADF] rounded-[32px] p-6 flex flex-col justify-between items-center text-center aspect-[3/4] border border-[#F0EADF]/20 hover:-translate-y-2 transition-all duration-300 group cursor-pointer shadow-lg"
-                  onClick={() => {
-                    const style = FRAME_STYLES.find(f => f.id === "obsidian");
-                    if (style) {
-                      setActiveFrame(style);
-                      const el = document.getElementById("header-element") || document.body;
-                      el.scrollIntoView({ behavior: "smooth" });
-                    }
-                  }}
-                >
-                  <div className="w-full flex-1 flex items-center justify-center">
-                    <img 
-                      src="https://pngimg.com/uploads/glasses/glasses_PNG54261.png" 
-                      alt="Obsidian slate block" 
-                      className="collection-card-img max-h-[85px] object-contain group-hover:scale-110 transition-transform duration-500 mix-blend-multiply"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-                  <div>
-                    <span className="font-primary text-[10px] font-black uppercase tracking-widest text-[#2E2F2E] block">@obsidian</span>
-                    <span className="font-secondary italic text-[9px] text-[#2E2F2E]/60 block mt-0.5">Matte Black Acetate</span>
-                  </div>
-                </div>
-
-                {/* Eyewear Card 3: Tortoise craft */}
-                <div 
-                  className="collection-card bg-[#F0EADF] rounded-[32px] p-6 flex flex-col justify-between items-center text-center aspect-[3/4] border border-[#F0EADF]/20 hover:-translate-y-2 transition-all duration-300 group cursor-pointer shadow-lg"
-                  onClick={() => {
-                    const style = FRAME_STYLES.find(f => f.id === "tortoise");
-                    if (style) {
-                      setActiveFrame(style);
-                      const el = document.getElementById("header-element") || document.body;
-                      el.scrollIntoView({ behavior: "smooth" });
-                    }
-                  }}
-                >
-                  <div className="w-full flex-1 flex items-center justify-center">
-                    <img 
-                      src="https://pngimg.com/uploads/glasses/glasses_PNG54325.png" 
-                      alt="Tortoise amber resin" 
-                      className="collection-card-img max-h-[85px] object-contain group-hover:scale-110 transition-transform duration-500 mix-blend-multiply"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-                  <div>
-                    <span className="font-primary text-[10px] font-black uppercase tracking-widest text-[#2E2F2E] block">@craft</span>
-                    <span className="font-secondary italic text-[9px] text-[#2E2F2E]/60 block mt-0.5">Warm Tortoiseshell</span>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Bottom footer bar of the collection block (embraces quality statement & view more action) */}
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-6 border-t border-[#F0EADF]/10 pt-8 mt-4 select-none">
-                <span className="font-secondary text-xs italic text-[#F0EADF]/65">
-                  We embrace quality, minimalism and comfort
-                </span>
-                
-                <button
-                  onClick={() => setIsCustomizerOpen(true)}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#F0EADF] hover:bg-[#F0EADF]/90 text-[#2E2F2E] text-[10px] font-primary font-extrabold uppercase tracking-widest rounded-full transition-all duration-300 group shadow-md active:scale-95 cursor-pointer"
-                >
-                  view more
-                  <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                </button>
-              </div>
-
-            </div>
-
-          </div>
-        </div>
-      </section>
 
       {/* INFINITE RUNNING MARQUEE FOOTER BAR (Exactly styled copy of 'momento • momento • momento') */}
       <div className="w-full bg-[#2E2F2E] text-[#F0EADF] py-3.5 overflow-hidden select-none relative z-20 border-t border-[#2E2F2E]">

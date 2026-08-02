@@ -23,7 +23,7 @@
     </script>
 
   <style>
-    #glasses-canvas {
+    #canvas-container {
       position: fixed;
       top: 0;
       left: 0;
@@ -33,6 +33,20 @@
       /* Contained above section backgrounds but below header/menus */
       pointer-events: none;
       display: block;
+    }
+
+    #glasses-canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+
+    @media (max-width: 768px) {
+      #canvas-container {
+        width: 100vw !important;
+        left: 0 !important;
+        right: 0 !important;
+      }
     }
 
     #glasses-loader {
@@ -63,7 +77,9 @@
 
 <body>
   <div id="root"></div>
-  <canvas id="glasses-canvas"></canvas>
+  <div id="canvas-container">
+    <canvas id="glasses-canvas"></canvas>
+  </div>
 
   <div id="glasses-loader">
     <span>Loading 3D model…</span>
@@ -84,9 +100,18 @@
     // 1. Scene Setup
     const scene = new THREE.Scene();
 
+    // Disable Three.js internal cache to prevent loading cached 3D assets
+    THREE.Cache.enabled = false;
+
     // 2. Camera Setup (PerspectiveCamera, FOV 32, positioned at z = 6)
     const camera = new THREE.PerspectiveCamera(32, window.innerWidth / window.innerHeight, 0.1, 100);
     camera.position.set(0, 0, 6);
+
+    if (window.innerWidth <= 768) {
+      camera.position.z = 3; // bring camera closer on mobile
+      camera.fov = 50; // wider FOV to stretch fill
+      camera.updateProjectionMatrix();
+    }
 
     // 3. WebGLRenderer Setup
     const canvas = document.getElementById('glasses-canvas');
@@ -313,8 +338,14 @@
     function refreshCoordinates() {
       if (!camera) return;
 
-      // Hero section coordinates (centered, slightly upper)
-      posHero.set(0.0, 0.0, 0);
+      // Hero section coordinates
+      const elHero = document.getElementById('hero-model-placeholder');
+      if (elHero) {
+        const rect = elHero.getBoundingClientRect();
+        posHero.copy(screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2, camera));
+      } else {
+        posHero.set(0.0, 0.0, 0);
+      }
 
       // Section 2 - Card 2
       const elCard = document.getElementById('glasses-landing-zone');
@@ -437,8 +468,8 @@
     const loader = new GLTFLoader();
     loader.setDRACOLoader(dracoLoader);
 
-    // CHANGE THIS PATH to your .glb file URL
-    const MODEL_PATH = "https://raw.githubusercontent.com/Ammadkhalil164/3d-Glasses-By-Ammad/main/black_glasses%20(1).glb";
+    // CHANGE THIS PATH to your .glb file URL with cache-busting timestamp
+    const MODEL_PATH = "/models/glasses.glb?v=" + Date.now();
 
     loader.load(
       MODEL_PATH,
@@ -638,6 +669,28 @@
         // Recalculate coordinates whenever ScrollTrigger updates or refreshes (layout shifts)
         ScrollTrigger.addEventListener("refresh", refreshCoordinates);
 
+        // Force refresh of ScrollTrigger as soon as model is loaded
+        ScrollTrigger.refresh();
+        setTimeout(() => {
+          ScrollTrigger.refresh();
+        }, 100);
+        setTimeout(() => {
+          ScrollTrigger.refresh();
+        }, 500);
+
+        // Log scroll state machine configuration
+        console.log("=== Scroll State Machine Configuration ===");
+        ScrollTrigger.getAll().forEach((trigger, idx) => {
+          console.log(`Trigger ${idx + 1}:`, {
+            trigger: trigger.vars.trigger,
+            start: trigger.vars.start,
+            end: trigger.vars.end,
+            endTrigger: trigger.vars.endTrigger,
+            scrub: trigger.vars.scrub
+          });
+        });
+        console.log("==========================================");
+
         // Waypoints settle bounce setup
         const waypointProgresses = [0.0, 0.25, 0.5, 0.75, 1.0];
         const bounceRotationX = { value: 0 };
@@ -730,6 +783,11 @@
 
           // 1. Gather all dynamic world positions
           const posHero = new THREE.Vector3(0.0, 0.0, 0);
+          const elHero = document.getElementById('hero-model-placeholder');
+          if (elHero) {
+            const rect = elHero.getBoundingClientRect();
+            posHero.copy(screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2, camera));
+          }
 
           const elCard = document.getElementById('glasses-landing-zone');
           const posCard = new THREE.Vector3(-2.4, 0.1, 0); // default fallback
@@ -832,7 +890,14 @@
           container.position.y = finalPos.y + baseFloat;
 
           // 3. Scale interpolation based on states
-          const scaleHeroToCard = THREE.MathUtils.lerp(baseScale * 1.0, baseScale * 0.38, transitionState.progress1);
+          let scaleHero = baseScale * 1.0;
+          if (elHero) {
+            const rect = elHero.getBoundingClientRect();
+            scaleHero = baseScale * (rect.width / 500.0);
+          }
+          const isMobile = window.innerWidth <= 768;
+          const cardScale = isMobile ? baseScale * 0.38 * 1.8 : baseScale * 0.38;
+          const scaleHeroToCard = THREE.MathUtils.lerp(scaleHero, cardScale, transitionState.progress1);
           const scaleLandedToDocked = THREE.MathUtils.lerp(scaleHeroToCard, scaleViewport, transitionState.progress2);
           const scaleDockedToAchievements = THREE.MathUtils.lerp(scaleLandedToDocked, scaleAchievements, transitionState.progress3);
           const scaleAchievementsToMistake = THREE.MathUtils.lerp(scaleDockedToAchievements, scaleMistake, transitionState.progress4);
@@ -913,14 +978,31 @@
       }
     );
 
-    // Handle window resize
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+    // Handle window resize with ResizeObserver on canvas container
+    const canvasContainer = document.getElementById('canvas-container');
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const width = entry.contentRect.width || (canvasContainer ? canvasContainer.clientWidth : window.innerWidth);
+        const height = entry.contentRect.height || (canvasContainer ? canvasContainer.clientHeight : window.innerHeight);
+        
+        camera.aspect = width / height;
+        if (width <= 768) {
+          camera.position.z = 3; // bring camera closer on mobile
+          camera.fov = 50; // wider FOV to stretch fill
+        } else {
+          camera.position.z = 6;
+          camera.fov = 32;
+        }
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
 
-      refreshCoordinates(); // Recalculate coordinates on resize
+        refreshCoordinates(); // Recalculate coordinates on resize
+      }
     });
+
+    if (canvasContainer) {
+      resizeObserver.observe(canvasContainer);
+    }
   </script>
 </body>
 

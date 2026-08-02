@@ -26,6 +26,9 @@ export default function ThreeDExperience() {
     // 1. Scene Setup
     const scene = new THREE.Scene();
 
+    // Disable Three.js internal cache
+    THREE.Cache.enabled = false;
+
     // 2. Camera Setup
     const camera = new THREE.PerspectiveCamera(
       35,
@@ -138,7 +141,7 @@ export default function ThreeDExperience() {
     loader.setDRACOLoader(dracoLoader);
 
     loader.load(
-      "/models/product.glb",
+      "/models/glasses.glb?v=" + Date.now(),
       (gltf) => {
         model = gltf.scene;
         
@@ -270,6 +273,24 @@ export default function ThreeDExperience() {
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("resize", handleResize);
+      
+      // Explicitly traverse the scene to dispose of all geometries and materials
+      scene.traverse((object) => {
+        if (!(object instanceof THREE.Mesh)) return;
+
+        if (object.geometry) {
+          object.geometry.dispose();
+        }
+
+        if (object.material) {
+          if (Array.isArray(object.material)) {
+            object.material.forEach((material) => material.dispose());
+          } else {
+            object.material.dispose();
+          }
+        }
+      });
+
       renderer.dispose();
     };
   }, []);
