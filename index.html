@@ -133,7 +133,7 @@
       width: 100%;
       height: 100%;
       object-fit: contain;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
     }
 
     .loader-text {
@@ -193,7 +193,7 @@
       val: 88,
       duration: 4.2,
       ease: 'sine.out',
-      onUpdate: function() {
+      onUpdate: function () {
         loaderTarget = Math.max(loaderTarget, this.targets()[0].val);
       }
     });
@@ -248,7 +248,7 @@
         visualProgress = 100;
         renderLoader(100);
         loaderFinished = true;
-        
+
         // Fade out and remove loading indicator
         const loaderEl = document.getElementById('glasses-loader');
         if (loaderEl) {
@@ -649,7 +649,7 @@
     loader.setDRACOLoader(dracoLoader);
 
     // CHANGE THIS PATH to your .glb file URL with cache-busting timestamp
-    const MODEL_PATH = "/models/glasses.glb?v=" + Date.now();
+    const MODEL_PATH = "/models/glasses.glb";
 
     loader.load(
       MODEL_PATH,
@@ -1147,7 +1147,7 @@
       for (let entry of entries) {
         const width = entry.contentRect.width || (canvasContainer ? canvasContainer.clientWidth : window.innerWidth);
         const height = entry.contentRect.height || (canvasContainer ? canvasContainer.clientHeight : window.innerHeight);
-        
+
         camera.aspect = width / height;
         if (width <= 768) {
           camera.position.z = 3; // bring camera closer on mobile

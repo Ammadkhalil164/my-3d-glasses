@@ -115,7 +115,7 @@ export default function ThreeDExperience() {
         if (elId === "landing-zone-4") return new THREE.Vector3(0, -4.0, -2);
         return new THREE.Vector3(0, 0, 0);
       }
-      
+
       const rect = el.getBoundingClientRect();
       const x = rect.left + rect.width / 2;
       const y = rect.top + rect.height / 2;
@@ -141,113 +141,113 @@ export default function ThreeDExperience() {
     loader.setDRACOLoader(dracoLoader);
 
     loader.load(
-      "/models/glasses.glb?v=" + Date.now(),
-      (gltf) => {
-        model = gltf.scene;
-        
-        // Center the geometry bounds
-        const box = new THREE.Box3().setFromObject(model);
-        const center = box.getCenter(new THREE.Vector3());
-        model.position.sub(center);
+      "/models/glasses.glb"
+        (gltf) => {
+      model = gltf.scene;
 
-        // Normalize initial model size
-        const size = box.getSize(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const scaleFactor = 1.6 / maxDim;
-        model.scale.setScalar(scaleFactor);
+      // Center the geometry bounds
+      const box = new THREE.Box3().setFromObject(model);
+      const center = box.getCenter(new THREE.Vector3());
+      model.position.sub(center);
 
-        // Group to manage local transforms
-        const group = new THREE.Group();
-        group.add(model);
-        scene.add(group);
+      // Normalize initial model size
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const scaleFactor = 1.6 / maxDim;
+      model.scale.setScalar(scaleFactor);
 
-        // Apply luxury finishes: roughness: 0.2, metalness: 0.3, envMapIntensity: 0.8
-        group.traverse((child) => {
-          if ((child as THREE.Mesh).isMesh) {
-            const mesh = child as THREE.Mesh;
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            if (mesh.material && (mesh.material as THREE.MeshStandardMaterial).isMeshStandardMaterial) {
-              const mat = mesh.material as THREE.MeshStandardMaterial;
-              mat.roughness = 0.2;
-              mat.metalness = 0.3;
-              mat.envMapIntensity = 0.8;
-              mat.needsUpdate = true;
-            }
+      // Group to manage local transforms
+      const group = new THREE.Group();
+      group.add(model);
+      scene.add(group);
+
+      // Apply luxury finishes: roughness: 0.2, metalness: 0.3, envMapIntensity: 0.8
+      group.traverse((child) => {
+        if ((child as THREE.Mesh).isMesh) {
+          const mesh = child as THREE.Mesh;
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+          if (mesh.material && (mesh.material as THREE.MeshStandardMaterial).isMeshStandardMaterial) {
+            const mat = mesh.material as THREE.MeshStandardMaterial;
+            mat.roughness = 0.2;
+            mat.metalness = 0.3;
+            mat.envMapIntensity = 0.8;
+            mat.needsUpdate = true;
           }
-        });
+        }
+      });
 
-        // Setup ScrollTrigger Timeline mapping
-        const animState = { progress: 0 };
-        const scrollTimeline = gsap.timeline({
-          scrollTrigger: {
-            trigger: "#root",
-            start: "top top",
-            end: "bottom bottom",
-            scrub: 2, // 2-second momentum lag
-          },
-        });
+      // Setup ScrollTrigger Timeline mapping
+      const animState = { progress: 0 };
+      const scrollTimeline = gsap.timeline({
+        scrollTrigger: {
+          trigger: "#root",
+          start: "top top",
+          end: "bottom bottom",
+          scrub: 2, // 2-second momentum lag
+        },
+      });
 
-        // Build path stages (0 -> 1 -> 2 -> 3)
-        scrollTimeline
+      // Build path stages (0 -> 1 -> 2 -> 3)
+      scrollTimeline
           .to(animState, { progress: 0, duration: 1 }) // Hold in Hero
-          .to(animState, { progress: 1, duration: 1.5, ease: "power2.inOut" }) // Slide to Dopamine
-          .to(animState, { progress: 1, duration: 1 }) // Hold in Dopamine
-          .to(animState, { progress: 2, duration: 1.5, ease: "power2.inOut" }) // Slide to Achievements
-          .to(animState, { progress: 2, duration: 1 }) // Hold in Achievements
-          .to(animState, { progress: 3, duration: 1.5, ease: "power2.inOut" }) // Slide to Mistake
-          .to(animState, { progress: 3, duration: 1 }); // Hold in Mistake
+        .to(animState, { progress: 1, duration: 1.5, ease: "power2.inOut" }) // Slide to Dopamine
+        .to(animState, { progress: 1, duration: 1 }) // Hold in Dopamine
+        .to(animState, { progress: 2, duration: 1.5, ease: "power2.inOut" }) // Slide to Achievements
+        .to(animState, { progress: 2, duration: 1 }) // Hold in Achievements
+        .to(animState, { progress: 3, duration: 1.5, ease: "power2.inOut" }) // Slide to Mistake
+        .to(animState, { progress: 3, duration: 1 }); // Hold in Mistake
 
-        // Render & Update Loop
-        const animate = () => {
-          requestAnimationFrame(animate);
+      // Render & Update Loop
+      const animate = () => {
+        requestAnimationFrame(animate);
 
-          if (group) {
-            // Find current waypoint interval
-            const progress = animState.progress;
-            const index = Math.floor(progress);
-            const frac = progress - index;
+        if (group) {
+          // Find current waypoint interval
+          const progress = animState.progress;
+          const index = Math.floor(progress);
+          const frac = progress - index;
 
-            const startWaypoint = waypoints[index];
-            const endWaypoint = waypoints[index + 1] || startWaypoint;
+          const startWaypoint = waypoints[index];
+          const endWaypoint = waypoints[index + 1] || startWaypoint;
 
-            // Resolve target dimensions and coordinates
-            const startPos = getElementWorldPos(startWaypoint.id, startWaypoint.z);
-            const endPos = getElementWorldPos(endWaypoint.id, endWaypoint.z);
+          // Resolve target dimensions and coordinates
+          const startPos = getElementWorldPos(startWaypoint.id, startWaypoint.z);
+          const endPos = getElementWorldPos(endWaypoint.id, endWaypoint.z);
 
-            const targetPos = new THREE.Vector3().lerpVectors(startPos, endPos, frac);
-            const targetScale = THREE.MathUtils.lerp(startWaypoint.scale, endWaypoint.scale, frac);
-            const targetRotX = THREE.MathUtils.lerp(startWaypoint.rot.x, endWaypoint.rot.x, frac);
-            const targetRotY = THREE.MathUtils.lerp(startWaypoint.rot.y, endWaypoint.rot.y, frac);
-            const targetRotZ = THREE.MathUtils.lerp(startWaypoint.rot.z, endWaypoint.rot.z, frac);
+          const targetPos = new THREE.Vector3().lerpVectors(startPos, endPos, frac);
+          const targetScale = THREE.MathUtils.lerp(startWaypoint.scale, endWaypoint.scale, frac);
+          const targetRotX = THREE.MathUtils.lerp(startWaypoint.rot.x, endWaypoint.rot.x, frac);
+          const targetRotY = THREE.MathUtils.lerp(startWaypoint.rot.y, endWaypoint.rot.y, frac);
+          const targetRotZ = THREE.MathUtils.lerp(startWaypoint.rot.z, endWaypoint.rot.z, frac);
 
-            // Antigravity Weightless Suspension float effect
-            const floatOffset = Math.sin(Date.now() * 0.002) * 0.05;
+          // Antigravity Weightless Suspension float effect
+          const floatOffset = Math.sin(Date.now() * 0.002) * 0.05;
 
-            // Interpolate rotations and apply float offsets
-            group.position.copy(targetPos);
-            group.position.y += floatOffset;
-            group.scale.setScalar(targetScale);
+          // Interpolate rotations and apply float offsets
+          group.position.copy(targetPos);
+          group.position.y += floatOffset;
+          group.scale.setScalar(targetScale);
 
-            // Mouse-guided micro-rotation for the Hero viewport
-            let mouseOffset = new THREE.Vector3(0, 0, 0);
-            if (progress < 0.2) {
-              mouseOffset.y = mouseRef.current.x * 0.4;
-              mouseOffset.x = mouseRef.current.y * -0.4;
-            }
-
-            group.rotation.set(
-              targetRotX + mouseOffset.x,
-              targetRotY + mouseOffset.y,
-              targetRotZ
-            );
+          // Mouse-guided micro-rotation for the Hero viewport
+          let mouseOffset = new THREE.Vector3(0, 0, 0);
+          if (progress < 0.2) {
+            mouseOffset.y = mouseRef.current.x * 0.4;
+            mouseOffset.x = mouseRef.current.y * -0.4;
           }
 
-          renderer.render(scene, camera);
-        };
+          group.rotation.set(
+            targetRotX + mouseOffset.x,
+            targetRotY + mouseOffset.y,
+            targetRotZ
+          );
+        }
 
-        animate();
-      },
+        renderer.render(scene, camera);
+      };
+
+      animate();
+    },
       undefined,
       (error) => {
         console.error("Error loading GLB glasses model:", error);
@@ -273,7 +273,7 @@ export default function ThreeDExperience() {
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("resize", handleResize);
-      
+
       // Explicitly traverse the scene to dispose of all geometries and materials
       scene.traverse((object) => {
         if (!(object instanceof THREE.Mesh)) return;
