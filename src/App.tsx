@@ -480,7 +480,7 @@ export default function App() {
               </div>
 
               {/* Middle row: Invisible alignment anchor (dont change dimensions to keep glasses position intact) */}
-              <div id="landing-zone-2" WEBGL_VIEWPORT_03="" className="flex-1 w-full aspect-[16/9] md:aspect-[1.8/1] relative">
+              <div id="landing-zone-2" data-webgl-viewport-03="" className="flex-1 w-full aspect-[16/9] md:aspect-[1.8/1] relative">
               </div>
 
               {/* Bottom row: Brand & Logo (panaride style) */}

@@ -359,7 +359,8 @@
 
     // Dynamic calculation of WEBGL_VIEWPORT_03 center in 3D world space (Z = 0)
     function updateCoordinates() {
-      const viewportEl = document.querySelector('[webgl_viewport_03]') ||
+      const viewportEl = document.querySelector('[data-webgl-viewport-03]') ||
+        document.querySelector('[webgl_viewport_03]') ||
         document.querySelector('[WEBGL_VIEWPORT_03]') ||
         document.getElementById('landing-zone-2');
       if (!viewportEl) {
@@ -400,6 +401,7 @@
     let scaleViewport = 1.0;
     let scaleAchievements = 1.0;
     let scaleMistake = 1.0;
+    let scaleHero = 1.0;
 
     // Mouse cursor interaction state (grab/grip and rotate from any direction)
     let isDragging = false;
@@ -523,8 +525,10 @@
       if (elHero) {
         const rect = elHero.getBoundingClientRect();
         posHero.copy(screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2, camera));
+        scaleHero = baseScale * (rect.width / 500.0);
       } else {
         posHero.set(0.0, 0.0, 0);
+        scaleHero = baseScale * 1.0;
       }
 
       // Section 2 - Card 2
@@ -556,7 +560,8 @@
       }
 
       // Viewport 3 scale
-      const elViewport = document.querySelector('[webgl_viewport_03]') ||
+      const elViewport = document.querySelector('[data-webgl-viewport-03]') ||
+        document.querySelector('[webgl_viewport_03]') ||
         document.querySelector('[WEBGL_VIEWPORT_03]') ||
         document.getElementById('landing-zone-2');
       if (elViewport) {
@@ -649,7 +654,7 @@
     loader.setDRACOLoader(dracoLoader);
 
     // CHANGE THIS PATH to your .glb file URL with cache-busting timestamp
-    const MODEL_PATH = "/models/glasses.glb";
+    const MODEL_PATH = "/models/glasses-optimized.glb";
 
     loader.load(
       MODEL_PATH,
@@ -884,7 +889,8 @@
 
         // Scale to fit 80% of the actual DOM element width in 3D world units
         function getScaleToFitViewportElement() {
-          const el = document.querySelector('[webgl_viewport_03]') ||
+          const el = document.querySelector('[data-webgl-viewport-03]') ||
+            document.querySelector('[webgl_viewport_03]') ||
             document.querySelector('[WEBGL_VIEWPORT_03]') ||
             document.getElementById('landing-zone-2');
           if (el) {
@@ -949,60 +955,7 @@
         function animate() {
           requestAnimationFrame(animate);
 
-          // 1. Gather all dynamic world positions
-          const posHero = new THREE.Vector3(0.0, 0.0, 0);
-          const elHero = document.getElementById('hero-model-placeholder');
-          if (elHero) {
-            const rect = elHero.getBoundingClientRect();
-            posHero.copy(screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2, camera));
-          }
-
-          const elCard = document.getElementById('glasses-landing-zone');
-          const posCard = new THREE.Vector3(-2.4, 0.1, 0); // default fallback
-          if (elCard) {
-            const rect = elCard.getBoundingClientRect();
-            posCard.copy(screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2, camera));
-          }
-
-          let posViewport = new THREE.Vector3(2.4, -0.3, 0); // default fallback
-          try {
-            posViewport.copy(updateCoordinates());
-          } catch (e) {
-            // fallback
-          }
-
-          const elAchievements = document.getElementById('landing-zone-3');
-          const posAchievements = new THREE.Vector3(1.8, -2.5, 0); // default fallback
-          if (elAchievements) {
-            const rect = elAchievements.getBoundingClientRect();
-            posAchievements.copy(screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2, camera));
-          }
-
-          const elMistake = document.getElementById('landing-zone-4');
-          const posMistake = new THREE.Vector3(0.0, -4.5, 0); // default fallback
-          if (elMistake) {
-            const rect = elMistake.getBoundingClientRect();
-            posMistake.copy(screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2, camera));
-          }
-
-          const posFooter = new THREE.Vector3(0.0, -1.2, -1.0);
-
-          // Update path spline representation dynamically
-          waypoints[1].copy(posCard);
-          waypoints[2].copy(posViewport);
-          waypoints[3].copy(posAchievements);
-          waypoints[4].copy(posMistake);
-          curve.points = waypoints;
-          curve.updateArcLengths();
-
-          if (isDebug && debugSpheres.length === waypoints.length) {
-            for (let i = 0; i < waypoints.length; i++) {
-              debugSpheres[i].position.copy(waypoints[i]);
-            }
-          }
-
-          // 2. Trajectory interpolation
-          // Spline path position
+          // 1. Path spline positions (NO layout thrashing or DOM query here!)
           const posPath = curve.getPointAt(scrollProgress);
           const scalePath = baseScale * getScaleAtProgress(scrollProgress);
 
@@ -1057,12 +1010,7 @@
           container.position.copy(finalPos);
           container.position.y = finalPos.y + baseFloat;
 
-          // 3. Scale interpolation based on states
-          let scaleHero = baseScale * 1.0;
-          if (elHero) {
-            const rect = elHero.getBoundingClientRect();
-            scaleHero = baseScale * (rect.width / 500.0);
-          }
+          // 3. Scale interpolation based on states (using cached scaleHero)
           const isMobile = window.innerWidth <= 768;
           const cardScale = isMobile ? baseScale * 0.38 * 1.8 : baseScale * 0.38;
           const scaleHeroToCard = THREE.MathUtils.lerp(scaleHero, cardScale, transitionState.progress1);
