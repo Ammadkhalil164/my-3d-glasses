@@ -390,7 +390,13 @@
       ejectionScale: 1.0  // Ejection scale multiplier (pop-out effect)
     };
 
-    // Coordinate and Scale caching to prevent layout thrashing (Item 4)
+    // Scroll-independent document coordinate cache
+    const docHero = { x: 0, y: 0, width: 500, fallback: true };
+    const docCard = { x: -2.4, y: 0.1, fallback: true };
+    const docViewport = { x: 2.4, y: -0.3, width: 0, height: 0, fallback: true };
+    const docAchievements = { x: 1.8, y: -2.5, width: 0, fallback: true };
+    const docMistake = { x: 0.0, y: -4.5, width: 0, fallback: true };
+
     const posHero = new THREE.Vector3(0.0, 0.0, 0);
     const posCard = new THREE.Vector3(-2.4, 0.1, 0);
     const posViewport = new THREE.Vector3(2.4, -0.3, 0);
@@ -402,6 +408,13 @@
     let scaleAchievements = 1.0;
     let scaleMistake = 1.0;
     let scaleHero = 1.0;
+
+    // Maps absolute document-space coordinates to 3D world space (Z = 0) by subtracting current scroll position
+    function screenToWorldScrollAdjusted(docX, docY, camera) {
+      const screenX = docX - window.scrollX;
+      const screenY = docY - window.scrollY;
+      return screenToWorld(screenX, screenY, camera);
+    }
 
     // Mouse cursor interaction state (grab/grip and rotate from any direction)
     let isDragging = false;
@@ -524,77 +537,108 @@
       const elHero = document.getElementById('hero-model-placeholder');
       if (elHero) {
         const rect = elHero.getBoundingClientRect();
-        posHero.copy(screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2, camera));
-        scaleHero = baseScale * (rect.width / 500.0);
-      } else {
-        posHero.set(0.0, 0.0, 0);
-        scaleHero = baseScale * 1.0;
+        if (rect.width > 0 && rect.height > 0) {
+          docHero.x = rect.left + window.scrollX + rect.width / 2;
+          docHero.y = rect.top + window.scrollY + rect.height / 2;
+          docHero.width = rect.width;
+          docHero.fallback = false;
+        }
       }
 
       // Section 2 - Card 2
       const elCard = document.getElementById('glasses-landing-zone');
       if (elCard) {
         const rect = elCard.getBoundingClientRect();
-        posCard.copy(screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2, camera));
+        if (rect.width > 0 && rect.height > 0) {
+          docCard.x = rect.left + window.scrollX + rect.width / 2;
+          docCard.y = rect.top + window.scrollY + rect.height / 2;
+          docCard.fallback = false;
+        }
       }
 
       // Section 3 - Viewport
-      try {
-        posViewport.copy(updateCoordinates());
-      } catch (e) {
-        // fallback
-      }
-
-      // Section 4 - Achievements
-      const elAchievements = document.getElementById('landing-zone-3');
-      if (elAchievements) {
-        const rect = elAchievements.getBoundingClientRect();
-        posAchievements.copy(screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2, camera));
-      }
-
-      // Section 5 - Mistake
-      const elMistake = document.getElementById('landing-zone-4');
-      if (elMistake) {
-        const rect = elMistake.getBoundingClientRect();
-        posMistake.copy(screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2, camera));
-      }
-
-      // Viewport 3 scale
       const elViewport = document.querySelector('[data-webgl-viewport-03]') ||
         document.querySelector('[webgl_viewport_03]') ||
         document.querySelector('[WEBGL_VIEWPORT_03]') ||
         document.getElementById('landing-zone-2');
       if (elViewport) {
         const rect = elViewport.getBoundingClientRect();
-        const leftPos = screenToWorld(rect.left, rect.top + rect.height / 2, camera);
-        const rightPos = screenToWorld(rect.right, rect.top + rect.height / 2, camera);
-        const worldWidth = leftPos.distanceTo(rightPos);
-        scaleViewport = baseScale * ((worldWidth * 0.6) / 2.2);
+        if (rect.width > 0 && rect.height > 0) {
+          docViewport.x = rect.left + window.scrollX + rect.width / 2;
+          docViewport.y = rect.top + window.scrollY + rect.height / 2;
+          docViewport.width = rect.width;
+          docViewport.height = rect.height;
+          docViewport.fallback = false;
+        }
+      }
+
+      // Section 4 - Achievements
+      const elAchievements = document.getElementById('landing-zone-3');
+      if (elAchievements) {
+        const rect = elAchievements.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          docAchievements.x = rect.left + window.scrollX + rect.width / 2;
+          docAchievements.y = rect.top + window.scrollY + rect.height / 2;
+          docAchievements.width = rect.width;
+          docAchievements.fallback = false;
+        }
+      }
+
+      // Section 5 - Mistake
+      const elMistake = document.getElementById('landing-zone-4');
+      if (elMistake) {
+        const rect = elMistake.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          docMistake.x = rect.left + window.scrollX + rect.width / 2;
+          docMistake.y = rect.top + window.scrollY + rect.height / 2;
+          docMistake.width = rect.width;
+          docMistake.fallback = false;
+        }
+      }
+
+      // Viewport scales calculated scroll-independently
+      if (elHero && !docHero.fallback) {
+        scaleHero = baseScale * (docHero.width / 500.0);
+      } else {
+        scaleHero = baseScale * 1.0;
+      }
+
+      if (elViewport && !docViewport.fallback) {
+        const docLeft = docViewport.x - docViewport.width / 2;
+        const docRight = docViewport.x + docViewport.width / 2;
+        const leftPos = screenToWorldScrollAdjusted(docLeft, docViewport.y, camera);
+        const rightPos = screenToWorldScrollAdjusted(docRight, docViewport.y, camera);
+        scaleViewport = baseScale * ((leftPos.distanceTo(rightPos) * 0.6) / 2.2);
       } else {
         scaleViewport = baseScale * (1.5 / 2.2);
       }
 
-      // Achievements scale
-      if (elAchievements) {
-        const rect = elAchievements.getBoundingClientRect();
-        const leftPos = screenToWorld(rect.left, rect.top + rect.height / 2, camera);
-        const rightPos = screenToWorld(rect.right, rect.top + rect.height / 2, camera);
-        const worldWidth = leftPos.distanceTo(rightPos);
-        scaleAchievements = baseScale * ((worldWidth * 0.85) / 2.2);
+      if (elAchievements && !docAchievements.fallback) {
+        const docLeft = docAchievements.x - docAchievements.width / 2;
+        const docRight = docAchievements.x + docAchievements.width / 2;
+        const leftPos = screenToWorldScrollAdjusted(docLeft, docAchievements.y, camera);
+        const rightPos = screenToWorldScrollAdjusted(docRight, docAchievements.y, camera);
+        scaleAchievements = baseScale * ((leftPos.distanceTo(rightPos) * 0.85) / 2.2);
       } else {
         scaleAchievements = baseScale * 0.8;
       }
 
-      // Mistake scale
-      if (elMistake) {
-        const rect = elMistake.getBoundingClientRect();
-        const leftPos = screenToWorld(rect.left, rect.top + rect.height / 2, camera);
-        const rightPos = screenToWorld(rect.right, rect.top + rect.height / 2, camera);
-        const worldWidth = leftPos.distanceTo(rightPos);
-        scaleMistake = baseScale * ((worldWidth * 0.85) / 2.2);
+      if (elMistake && !docMistake.fallback) {
+        const docLeft = docMistake.x - docMistake.width / 2;
+        const docRight = docMistake.x + docMistake.width / 2;
+        const leftPos = screenToWorldScrollAdjusted(docLeft, docMistake.y, camera);
+        const rightPos = screenToWorldScrollAdjusted(docRight, docMistake.y, camera);
+        scaleMistake = baseScale * ((leftPos.distanceTo(rightPos) * 0.85) / 2.2);
       } else {
         scaleMistake = baseScale * 1.2;
       }
+
+      // Update static 3D coordinate vector positions for the curve initially
+      if (!docHero.fallback) posHero.copy(screenToWorldScrollAdjusted(docHero.x, docHero.y, camera));
+      if (!docCard.fallback) posCard.copy(screenToWorldScrollAdjusted(docCard.x, docCard.y, camera));
+      if (!docViewport.fallback) posViewport.copy(screenToWorldScrollAdjusted(docViewport.x, docViewport.y, camera));
+      if (!docAchievements.fallback) posAchievements.copy(screenToWorldScrollAdjusted(docAchievements.x, docAchievements.y, camera));
+      if (!docMistake.fallback) posMistake.copy(screenToWorldScrollAdjusted(docMistake.x, docMistake.y, camera));
 
       // Update path spline waypoints
       waypoints[1].copy(posCard);
@@ -604,11 +648,6 @@
       curve.points = waypoints;
       curve.updateArcLengths();
 
-      if (isDebug && debugSpheres.length === waypoints.length) {
-        for (let i = 0; i < waypoints.length; i++) {
-          debugSpheres[i].position.copy(waypoints[i]);
-        }
-      }
     }
 
     const floatState = { factor: 1.0 }; // Blends weightless float off during active scrubs
@@ -676,6 +715,11 @@
           if (child.isMesh) {
             child.castShadow = true;
             child.receiveShadow = true;
+            child.frustumCulled = false;
+            if (child.geometry) {
+              child.geometry.computeBoundingBox();
+              child.geometry.computeBoundingSphere();
+            }
 
             // Apply a MeshStandardMaterial override for a matte luxury black finish
             const prevMaterial = child.material;
@@ -873,7 +917,7 @@
         // Scale Interpolation Helper
         const getScaleAtProgress = (t) => {
           const scales = [1.0, 0.38, 0.95, 0.85, 1.2]; // Waypoint scales
-          if (t <= 0) return scales[0];
+          if (isNaN(t) || t <= 0) return scales[0];
           if (t >= 1) return scales[4];
 
           const segmentCount = scales.length - 1;
@@ -955,9 +999,22 @@
         function animate() {
           requestAnimationFrame(animate);
 
+          if (!camera || !model) return;
+
+          // Update dynamic 3D coords based on current scroll offset before calculations
+          if (!docHero.fallback) posHero.copy(screenToWorldScrollAdjusted(docHero.x, docHero.y, camera));
+          if (!docCard.fallback) posCard.copy(screenToWorldScrollAdjusted(docCard.x, docCard.y, camera));
+          if (!docViewport.fallback) posViewport.copy(screenToWorldScrollAdjusted(docViewport.x, docViewport.y, camera));
+          if (!docAchievements.fallback) posAchievements.copy(screenToWorldScrollAdjusted(docAchievements.x, docAchievements.y, camera));
+          if (!docMistake.fallback) posMistake.copy(screenToWorldScrollAdjusted(docMistake.x, docMistake.y, camera));
+
+          // Safe check scrollProgress NaN
+          let currentProgress = scrollProgress;
+          if (isNaN(currentProgress)) currentProgress = 0;
+
           // 1. Path spline positions (NO layout thrashing or DOM query here!)
-          const posPath = curve.getPointAt(scrollProgress);
-          const scalePath = baseScale * getScaleAtProgress(scrollProgress);
+          const posPath = curve.getPointAt(currentProgress);
+          const scalePath = baseScale * getScaleAtProgress(currentProgress);
 
           // Hero-to-Card 2 Trajectory via smooth Bezier arc curve (Item 2)
           const controlPosHeroToCard = new THREE.Vector3(
@@ -1028,7 +1085,7 @@
           // Settle bounce triggering logic (waypoint bounds)
           let closeToWaypoint = -1;
           for (let i = 0; i < waypointProgresses.length; i++) {
-            if (Math.abs(scrollProgress - waypointProgresses[i]) < 0.04) {
+            if (Math.abs(currentProgress - waypointProgresses[i]) < 0.04) {
               closeToWaypoint = i;
               break;
             }
@@ -1113,6 +1170,17 @@
 
     if (canvasContainer) {
       resizeObserver.observe(canvasContainer);
+    }
+
+    const triggerLayoutRefresh = () => {
+      ScrollTrigger.refresh();
+      refreshCoordinates();
+    };
+
+    window.addEventListener('load', triggerLayoutRefresh);
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(triggerLayoutRefresh);
     }
   </script>
 </body>
